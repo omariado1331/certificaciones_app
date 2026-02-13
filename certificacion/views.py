@@ -5,7 +5,6 @@ from rest_framework import viewsets
 
 class CertificadoDescendenciaViewSet(viewsets.ModelViewSet):
     queryset = CertificadoDescendencia.objects.all().select_related(
-        'correlativo',
         'oficina'
     ).prefetch_related('descendientes')
     

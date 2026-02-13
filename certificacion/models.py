@@ -91,12 +91,12 @@ class CertificadoDescendencia(models.Model):
     
 class Funcionario(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    nombres = models.CharField(max_length=100)
+    nombres = models.CharField(max_length=100, null=True, blank=True)
     apellido_paterno = models.CharField(max_length=100, blank=True, null=True)
     apellido_materno = models.CharField(max_length=100, blank=True, null=True)
-    ci = models.CharField(max_length=20, unique=True)
-    telefono = models.CharField(max_length=20)
-    oficina = models.ForeignKey(Oficina, on_delete=models.CASCADE)
+    ci = models.CharField(max_length=20, unique=True, null=True, blank=True)
+    telefono = models.CharField(max_length=20, null=True, blank=True)
+    oficina = models.ForeignKey(Oficina, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return f"{self.nombres} {self.apellido_paterno} {self.apellido_materno} - CI: {self.ci}"
