@@ -4,6 +4,7 @@ from simple_history.models import HistoricalRecords
 from django.utils import timezone
 from datetime import timedelta
 import uuid
+
 # Create your models here.
 
 class Oficina(models.Model):
@@ -31,9 +32,11 @@ class CertificadoDescendencia(models.Model):
     certificado = models.FileField(upload_to='certificados/', null=True, blank=True)
     ci_solicitante = models.CharField(max_length=20, db_index=True)
     nombres_solicitante = models.CharField(max_length=100)
-    nombres = models.CharField(max_length=100)
-    primer_apellido = models.CharField(max_length=100)
-    segundo_apellido = models.CharField(max_length=100)
+    # progenitor(a) fields
+    nombres_progenitor = models.CharField(max_length=100)
+    primer_apellido_progenitor = models.CharField(max_length=100, blank=True, null=True)
+    segundo_apellido_progenitor = models.CharField(max_length=100, blank=True, null=True)
+
     codigo_qr = models.ImageField(upload_to='qr_codes/', null=True, blank=True)
     codigo_seguridad = models.UUIDField(
         default=uuid.uuid4, 
@@ -46,7 +49,7 @@ class CertificadoDescendencia(models.Model):
         default='VIGENTE'
     )
     fecha_emision = models.DateTimeField(auto_now_add=True)
-    correlativo = models.OneToOneField(CorrelativoDescendencia, on_delete=models.PROTECT)
+    correlativo = models.IntegerField()
     oficina = models.ForeignKey(Oficina, on_delete=models.PROTECT)
     fecha_vencimiento = models.DateTimeField()
 
@@ -89,8 +92,8 @@ class CertificadoDescendencia(models.Model):
 class Funcionario(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     nombres = models.CharField(max_length=100)
-    apellido_paterno = models.CharField(max_length=100)
-    apellido_materno = models.CharField(max_length=100)
+    apellido_paterno = models.CharField(max_length=100, blank=True, null=True)
+    apellido_materno = models.CharField(max_length=100, blank=True, null=True)
     ci = models.CharField(max_length=20, unique=True)
     telefono = models.CharField(max_length=20)
     oficina = models.ForeignKey(Oficina, on_delete=models.CASCADE)
@@ -101,16 +104,20 @@ class Funcionario(models.Model):
 
 class Descendiente(models.Model):
     nombres = models.CharField(max_length=100)
-    primer_apellido = models.CharField(max_length=100)
-    segundo_apellido = models.CharField(max_length=100)
+    primer_apellido = models.CharField(max_length=100, blank=True, null=True)
+    segundo_apellido = models.CharField(max_length=100, blank=True, null=True)
     oficialia = models.CharField(max_length=100)
     libro = models.CharField(max_length=20)
     partida = models.CharField(max_length=20)
     fecha_inscripcion = models.DateField()
     sexo = models.CharField(max_length=20)
     fecha_nacimiento = models.DateField()
-    certificado_descendencia = models.ForeignKey(CertificadoDescendencia, on_delete=models.CASCADE, related_name='descendientes')
+    certificado_descendencia = models.ForeignKey(
+        CertificadoDescendencia, 
+        on_delete=models.CASCADE, 
+        related_name='descendientes'
+    )
 
     def __str__(self):
         return f"{self.nombres} {self.primer_apellido} {self.segundo_apellido} - Nacido el {self.fecha_nacimiento}"
-    
+   

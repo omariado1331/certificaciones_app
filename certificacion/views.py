@@ -1,3 +1,13 @@
 from django.shortcuts import render
+from .models import CertificadoDescendencia
+from .serializer import CertificadoDescendenciaSerializer
+from rest_framework import viewsets
 
-# Create your views here.
+class CertificadoDescendenciaViewSet(viewsets.ModelViewSet):
+    queryset = CertificadoDescendencia.objects.all().select_related(
+        'correlativo',
+        'oficina'
+    ).prefetch_related('descendientes')
+    
+    serializer_class = CertificadoDescendenciaSerializer
+
