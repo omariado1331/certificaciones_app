@@ -28,23 +28,28 @@ class CertificadoDescendenciaSerializer(serializers.ModelSerializer):
             'codigo_qr'
         )
 
-        def create(self, validated_data):
-            descendientes_data = validated_data.pop('descendientes', [])
+    def create(self, validated_data):
+        descendientes_data = validated_data.pop('descendientes', [])
 
-            with transaction.atomic():
-                # creacion del certificado de descendencia
-                certificado = CertificadoDescendencia.objects.create(**validated_data)
+        with transaction.atomic():
+            # creacion del certificado de descendencia
+            certificado = CertificadoDescendencia.objects.create(**validated_data)
 
-                # creacion de los descendientes asociados
-                descendientes_obj = [
-                    Descendiente(
-                        certificado_descendencia=certificado,
-                        **desc
-                    )
-                    for desc in descendientes_data
-                ]
+            # creacion de los descendientes asociados
+            descendientes_obj = [
+                Descendiente(
+                    certificado_descendencia=certificado,
+                    **desc
+                )
+                for desc in descendientes_data
+            ]
 
-                Descendiente.objects.bulk_create(descendientes_obj)
+            Descendiente.objects.bulk_create(descendientes_obj)
 
-            return certificado
+            from certificacion.services.certificado_service import (
+                generar_documentos_certificado
+            )
+            generar_documentos_certificado(certificado)
+               
+        return certificado
         

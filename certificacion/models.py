@@ -56,7 +56,7 @@ class CertificadoDescendencia(models.Model):
     # property to generate the certificate number based on the correlativo and office sigla
     @property
     def numero_certificado(self):
-        return f"{self.correlativo.nro_correlativo}-{self.oficina.sigla}"
+        return f"{self.correlativo}-{self.oficina.sigla}"
     
     # historical records for tracking changes
     history = HistoricalRecords()
@@ -75,7 +75,7 @@ class CertificadoDescendencia(models.Model):
                 correlativo_obj.nro_correlativo += 1
                 correlativo_obj.save()
 
-                self.correlativo = correlativo_obj
+                self.correlativo = correlativo_obj.nro_correlativo
 
                 # set expiration date to 1 year from now
                 self.fecha_vencimiento = timezone.now() + timedelta(days=30)

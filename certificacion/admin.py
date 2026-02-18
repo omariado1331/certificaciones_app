@@ -23,6 +23,7 @@ class CertificadoDescendenciaAdmin(SimpleHistoryAdmin):
     list_display = (
         "ci_solicitante",
         "nombres_solicitante",
+        "codigo_seguridad",
         "correlativo",
         "oficina",
         "estado_certificado",
