@@ -62,6 +62,8 @@ class CertificadoDescendencia(models.Model):
     history = HistoricalRecords()
 
     def save(self, *args, **kwargs):
+        # Normalize the CI by stripping whitespace and converting to uppercase
+        self.ci_solicitante = self.ci_solicitante.strip().upper()
         # if the certificate is being created for the first time, set the correlativo and expiration date
         if not self.pk:
             with transaction.atomic():
@@ -120,4 +122,4 @@ class Descendiente(models.Model):
 
     def __str__(self):
         return f"{self.nombres} {self.primer_apellido} {self.segundo_apellido} - Nacido el {self.fecha_nacimiento}"
-   
+    
