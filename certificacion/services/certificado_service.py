@@ -369,7 +369,7 @@ def draw_table_multipage(canvas_obj, certificado, table_data, column_widths, x_s
 
         dibujar_nota_final(canvas_obj, certificado, y_start, table_height, page_width, page_height)
 
-        # paginacion
+        # paginacion numero de pagina
         numeracion = f"Página {page_index + 1} de {total_paginas}"
         canvas_obj.setFont("Helvetica-Bold", 10)
         canvas_obj.drawRightString(
