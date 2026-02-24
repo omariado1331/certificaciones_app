@@ -5,7 +5,8 @@ from .models import (
     CorrelativoDescendencia,
     CertificadoDescendencia,
     Descendiente,
-    Funcionario
+    Funcionario,
+    Administrador
 )
 # Register your models here.
 @admin.register(Oficina)
@@ -41,4 +42,9 @@ class DescendienteAdmin(admin.ModelAdmin):
 @admin.register(Funcionario)
 class FuncionarioAdmin(admin.ModelAdmin):
     list_display = ("oficina", "nombres", "apellido_paterno", "apellido_materno")
+    search_fields = ("user__username",)
+
+@admin.register(Administrador)
+class FuncionarioAdmin(admin.ModelAdmin):
+    list_display = ("nombres", "apellido_paterno", "apellido_materno")
     search_fields = ("user__username",)

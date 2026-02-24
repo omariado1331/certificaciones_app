@@ -1,10 +1,9 @@
 from rest_framework import serializers
 from .models import CertificadoDescendencia, Descendiente
 from django.db import transaction
-from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import Funcionario
+from .models import Administrador
 
 class DescendienteSerializer(serializers.ModelSerializer):
     class Meta:
@@ -57,56 +56,54 @@ class CertificadoDescendenciaSerializer(serializers.ModelSerializer):
                
         return certificado
 
-
-class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    password = serializers.CharField(write_only=True)
-
-    def validate(self, data):
-        username = data.get('username')
-        password = data.get('password')
-        
-        user = authenticate(username=username, password=password)
-
-        if not user:
-            raise serializers.ValidationError("Credenciales inválidas")
-        
-        try:
-            funcionario = Funcionario.objects.select_related('oficina').get(user=user)
-        except Funcionario.DoesNotExist:
-            raise serializers.ValidationError("El usuario no es un funcionario")
-        
-        # generar JWT
-        refresh = RefreshToken.for_user(user)
-
-        return {
-            "access": str(refresh.access_token),
-            "refresh": str(refresh),
-            "funcionario": {
-                "id": funcionario.id,
-                "nombres": funcionario.nombres,
-                "apellido_paterno": funcionario.apellido_paterno,
-                "apellido_materno": funcionario.apellido_materno,
-                "ci": funcionario.ci,
-                "telefono": funcionario.telefono,
-                "oficina": funcionario.oficina.nombre if funcionario.oficina else None,
-            }
-        }
-    
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
 
-        # Agregar información adicional al token
-        try:
-            funcionario = Funcionario.objects.select_related('oficina').get(user=user)
-            token['funcionario_id'] = funcionario.id
-            token['ci'] = funcionario.ci
-            if funcionario.oficina:
-                token['oficina_id'] = funcionario.oficina.id
-            
-        except Funcionario.DoesNotExist:
-            pass
+    rol = serializers.CharField(write_only=True)
 
-        return token
+    def validate(self, attrs):
+        data = super().validate(attrs)
+
+        rol = attrs.get("rol")
+        user = self.user
+
+        token = self.get_token(user)
+
+        # VALIDACIÓN POR ROL
+        if rol == "funcionario":
+            try:
+                funcionario = Funcionario.objects.select_related(
+                    "oficina"
+                ).get(user=user)
+
+                token["rol"] = "funcionario"
+                token["funcionario_id"] = funcionario.id
+
+                if funcionario.oficina:
+                    token["oficina_id"] = funcionario.oficina.id
+
+            except Funcionario.DoesNotExist:
+                raise serializers.ValidationError(
+                    {"detail": "El usuario no pertenece al rol FUNCIONARIO"}
+                )
+
+        elif rol == "administrador":
+            try:
+                administrador = Administrador.objects.get(user=user)
+                token["rol"] = "administrador"
+                token["administrador_id"] = administrador.id
+
+            except Administrador.DoesNotExist:
+                raise serializers.ValidationError(
+                    {"detail": "El usuario no pertenece al rol ADMINISTRADOR"}
+                )
+
+        else:
+            raise serializers.ValidationError(
+                {"detail": "Rol inválido"}
+            )
+
+        # devolver tokens
+        data["access"] = str(token.access_token)
+        data["refresh"] = str(token)
+
+        return data

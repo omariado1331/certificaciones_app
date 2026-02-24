@@ -34,10 +34,10 @@ def create_admin(sender, instance, created, **kwargs):
             Administrador.objects.get_or_create(user=instance)
 
 @receiver(m2m_changed, sender=User.groups.through)
-def asignacion_grupo_funcionario(sender, instance, action, pk_set, **kwargs):
+def asignacion_grupo_administrador(sender, instance, action, pk_set, **kwargs):
     if action == "post_add":
         grupo_admin = Group.objects.filter(name="Administrador").first()
 
         # si el grupo agregado es el de Administrador
         if grupo_admin and grupo_admin.pk in pk_set:
-            Funcionario.objects.get_or_create(user=instance)
+            Administrador.objects.get_or_create(user=instance)
