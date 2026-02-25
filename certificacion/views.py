@@ -5,10 +5,11 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView
 
 from .models import Funcionario
-from .serializer import CertificadoDescendenciaSerializer, CustomTokenObtainPairSerializer, FuncionarioInformacionSerializer, FuncionarioUpdateSerializer
-
+from .serializer import CertificadoDescendenciaSerializer, CustomTokenObtainPairSerializer, FuncionarioInformacionSerializer, FuncionarioUpdateSerializer, CertificadoDescendenciaListSerializer
+from .services.pagination_service import StandardResultsSetPagination
 from .security.permissions import IsFuncionario
 
 class CertificadoDescendenciaViewSet(viewsets.ModelViewSet):
@@ -16,7 +17,7 @@ class CertificadoDescendenciaViewSet(viewsets.ModelViewSet):
         'oficina'
     ).prefetch_related('descendientes')
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsFuncionario]
     
     serializer_class = CertificadoDescendenciaSerializer
 
@@ -68,3 +69,20 @@ class FuncionarioUpdateView(APIView):
             )
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class CertificadosFuncionarioView(ListAPIView):
+    serializer_class = CertificadoDescendenciaListSerializer
+    permission_classes = [IsAuthenticated, IsFuncionario]
+    pagination_class = StandardResultsSetPagination
+
+    def get_queryset(self):
+        
+        funcionario_id = self.request.auth.get("funcionario_id")
+
+        return (
+            CertificadoDescendencia.objects
+            .select_related("oficina")
+            .filter(funcionario_id=funcionario_id)
+            .order_by("-fecha_emision")
+        ) 
+

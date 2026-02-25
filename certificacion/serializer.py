@@ -2,8 +2,7 @@ from rest_framework import serializers
 from .models import CertificadoDescendencia, Descendiente
 from django.db import transaction
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import Funcionario
-from .models import Administrador
+from .models import Funcionario, Administrador, CertificadoDescendencia
 
 class DescendienteSerializer(serializers.ModelSerializer):
     class Meta:
@@ -55,6 +54,30 @@ class CertificadoDescendenciaSerializer(serializers.ModelSerializer):
             generar_documentos_certificado(certificado)
                
         return certificado
+
+class CertificadoDescendenciaListSerializer(serializers.ModelSerializer):
+
+    certificado = serializers.SerializerMethodField()
+    nombre_oficina = serializers.CharField(source='oficina.nombre')
+    numero_certificado = serializers.ReadOnlyField()
+
+    class Meta:
+        model= CertificadoDescendencia
+        fields = [
+            "certificado",
+            "ci_solicitante",
+            "nombres_solicitante",
+            "estado_certificado",
+            "numero_certificado",
+            "nombre_oficina",
+            "fecha_emision",
+        ]
+
+    def get_certificado(self, obj):
+        request = self.context.get('request')
+        if obj.certificado:
+            return request.build_absolute_uri(obj.certificado.url)
+        return None
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
