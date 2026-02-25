@@ -58,52 +58,69 @@ class CertificadoDescendenciaSerializer(serializers.ModelSerializer):
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
-    rol = serializers.CharField(write_only=True)
-
     def validate(self, attrs):
         data = super().validate(attrs)
 
-        rol = attrs.get("rol")
         user = self.user
-
         token = self.get_token(user)
 
-        # VALIDACIÓN POR ROL
-        if rol == "funcionario":
-            try:
-                funcionario = Funcionario.objects.select_related(
-                    "oficina"
-                ).get(user=user)
+        try:
+            funcionario = Funcionario.objects.select_related("oficina").get(user=user)
 
-                token["rol"] = "funcionario"
-                token["funcionario_id"] = funcionario.id
+            token["rol"] = "funcionario"
+            token["funcionario_id"] = funcionario.id
 
-                if funcionario.oficina:
-                    token["oficina_id"] = funcionario.oficina.id
-
-            except Funcionario.DoesNotExist:
-                raise serializers.ValidationError(
-                    {"detail": "El usuario no pertenece al rol FUNCIONARIO"}
-                )
-
-        elif rol == "administrador":
+            if funcionario.oficina:
+                token["oficina_id"] = funcionario.oficina.id
+        
+        except Funcionario.DoesNotExist:
             try:
                 administrador = Administrador.objects.get(user=user)
+
                 token["rol"] = "administrador"
                 token["administrador_id"] = administrador.id
-
             except Administrador.DoesNotExist:
                 raise serializers.ValidationError(
-                    {"detail": "El usuario no pertenece al rol ADMINISTRADOR"}
+                    { "detail": "El usuario no tiene un rol asignado" }
                 )
-
-        else:
-            raise serializers.ValidationError(
-                {"detail": "Rol inválido"}
-            )
-
-        # devolver tokens
+            
         data["access"] = str(token.access_token)
         data["refresh"] = str(token)
 
         return data
+
+
+class FuncionarioInformacionSerializer(serializers.ModelSerializer):
+
+    oficina_nombre = serializers.SerializerMethodField()
+    oficina_direccion = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Funcionario
+        fields = [
+            "nombres",
+            "apellido_paterno",
+            "apellido_materno",
+            "ci",
+            "telefono",
+            "oficina_nombre",
+            "oficina_direccion",
+        ]
+
+    def get_oficina_nombre(self, obj):
+        return obj.oficina.nombre if obj.oficina else None
+
+    def get_oficina_direccion(self, obj):
+        return obj.oficina.direccion if obj.oficina else None
+
+
+class FuncionarioUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Funcionario
+        fields = [
+            "nombres",
+            "apellido_paterno",
+            "apellido_materno",
+            "ci",
+            "telefono",
+        ]
