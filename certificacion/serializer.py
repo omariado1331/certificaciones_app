@@ -56,15 +56,13 @@ class CertificadoDescendenciaSerializer(serializers.ModelSerializer):
         return certificado
 
 class CertificadoDescendenciaListSerializer(serializers.ModelSerializer):
-
-    certificado = serializers.SerializerMethodField()
     nombre_oficina = serializers.CharField(source='oficina.nombre')
     numero_certificado = serializers.ReadOnlyField()
 
     class Meta:
         model= CertificadoDescendencia
         fields = [
-            "certificado",
+            "id",
             "ci_solicitante",
             "nombres_solicitante",
             "estado_certificado",
@@ -73,11 +71,6 @@ class CertificadoDescendenciaListSerializer(serializers.ModelSerializer):
             "fecha_emision",
         ]
 
-    def get_certificado(self, obj):
-        request = self.context.get('request')
-        if obj.certificado:
-            return request.build_absolute_uri(obj.certificado.url)
-        return None
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
