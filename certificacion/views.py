@@ -15,13 +15,30 @@ from .security.permissions import IsFuncionario
 from .utils import generar_token_preview, validar_token_preview
 
 class CertificadoDescendenciaViewSet(viewsets.ModelViewSet):
-    queryset = CertificadoDescendencia.objects.all().select_related(
-        'oficina'
-    ).prefetch_related('descendientes')
 
     permission_classes = [IsAuthenticated, IsFuncionario]
     
     serializer_class = CertificadoDescendenciaSerializer
+
+    def get_queryset(self):
+
+        funcionario = self.request.user.funcionario
+
+        return ( 
+        CertificadoDescendencia.objects
+            .filter(funcionario=funcionario)
+            .select_related("oficina")
+            .prefetch_related("descendientes")
+        )
+
+    def perform_create(self, serializer):
+        funcionario = self.request.user.funcionario
+        oficina = funcionario.oficina
+        serializer.save(
+            funcionario=funcionario,
+            oficina=oficina
+        )
+
 
 class LoginJWTView(TokenObtainPairView):
 

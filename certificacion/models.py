@@ -113,12 +113,13 @@ class Descendiente(models.Model):
     nombres = models.CharField(max_length=100)
     primer_apellido = models.CharField(max_length=100, blank=True, null=True)
     segundo_apellido = models.CharField(max_length=100, blank=True, null=True)
-    oficialia = models.CharField(max_length=100)
-    libro = models.CharField(max_length=20)
-    partida = models.CharField(max_length=20)
-    fecha_inscripcion = models.DateField()
-    sexo = models.CharField(max_length=20)
-    fecha_nacimiento = models.DateField()
+    oficialia = models.CharField(max_length=100, blank=True, null=True)
+    libro = models.CharField(max_length=20, blank=True, null=True)
+    partida = models.CharField(max_length=20, blank=True, null=True)
+    fecha_inscripcion = models.DateField(blank=True, null=True)
+    sexo = models.CharField(max_length=20, blank=True, null=True)
+    fecha_nacimiento = models.DateField(blank=True, null=True)
+    sistema = models.CharField(max_length=30, null=True, blank=True)
     certificado_descendencia = models.ForeignKey(
         CertificadoDescendencia, 
         on_delete=models.CASCADE, 
