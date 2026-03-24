@@ -6,7 +6,8 @@ from .models import (
     CertificadoDescendencia,
     Descendiente,
     Funcionario,
-    Administrador
+    Administrador,
+    AuditoriaSistema
 )
 # Register your models here.
 @admin.register(Oficina)
@@ -48,3 +49,9 @@ class FuncionarioAdmin(admin.ModelAdmin):
 class FuncionarioAdmin(admin.ModelAdmin):
     list_display = ("nombres", "apellido_paterno", "apellido_materno")
     search_fields = ("user__username",)
+
+@admin.register(AuditoriaSistema)
+class AuditoriaAdmin(admin.ModelAdmin):
+    list_display = ("user","accion","tramite","ip","fecha")
+    search_fields = ("user__username", "tramite")
+    list_filter = ("accion", "fecha")

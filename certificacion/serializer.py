@@ -4,6 +4,7 @@ from django.db import transaction
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import Funcionario, Administrador, CertificadoDescendencia
 from certificacion.services.certificado_service import (generar_documentos_certificado)
+from .utils import registrar_auditoria
 
 class DescendienteSerializer(serializers.ModelSerializer):
     class Meta:
@@ -77,7 +78,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
     def validate(self, attrs):
         data = super().validate(attrs)
-
+        request = self.context.get("request")
         user = self.user
         token = self.get_token(user)
 
@@ -103,6 +104,13 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             
         data["access"] = str(token.access_token)
         data["refresh"] = str(token)
+
+        registrar_auditoria(
+            request,
+            accion="LOGIN",
+            descripcion=f"Login de usuario {user.username}",
+            user=user
+        )
 
         return data
 

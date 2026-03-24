@@ -1,4 +1,3 @@
-from .models import CertificadoDescendencia
 from django.shortcuts import get_object_or_404
 from django.http import FileResponse, Http404
 from rest_framework import viewsets, status
@@ -8,11 +7,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView, View
 from rest_framework.generics import ListAPIView
 from urllib.parse import urlencode
-from .models import Funcionario
+from .models import (
+    Funcionario, CertificadoDescendencia
+)
 from .serializer import CertificadoDescendenciaSerializer, CustomTokenObtainPairSerializer, FuncionarioInformacionSerializer, FuncionarioUpdateSerializer, CertificadoDescendenciaListSerializer
 from .services.pagination_service import StandardResultsSetPagination
 from .security.permissions import IsFuncionario
-from .utils import generar_token_preview, validar_token_preview
+from .utils import generar_token_preview, validar_token_preview, registrar_auditoria
 
 class CertificadoDescendenciaViewSet(viewsets.ModelViewSet):
 
@@ -44,6 +45,7 @@ class LoginJWTView(TokenObtainPairView):
 
     serializer_class = CustomTokenObtainPairSerializer
     permission_classes = [] # Permitir acceso sin autenticación
+
 
 class FuncionarioInformacionView(APIView):
     
@@ -148,6 +150,8 @@ class CertificadoPreviewFileView(View):
         
         certificado_id, funcionario_id = data
 
+        funcionario = Funcionario.objects.get(id=funcionario_id)
+
         try:
             certificado = CertificadoDescendencia.objects.get(
                 id=certificado_id,
@@ -159,8 +163,74 @@ class CertificadoPreviewFileView(View):
         if not certificado.certificado:
             raise Http404("El registro no tiene certificado")
         
+        registrar_auditoria(
+            request,
+            accion="VIEW",
+            descripcion=f"Vista del certificado {certificado.numero_certificado}",
+            user=funcionario.user
+        )
+        
         return FileResponse(
             certificado.certificado.open('rb'),
             content_type='application/pdf',
             filename=f"certificado_descendencia_{certificado.numero_certificado}.pdf"
         )
+    
+def get_client_ip(request):
+    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(",")[0]
+    else:
+        ip = request.META.get("REMOTE_ADDR")
+    return ip
+
+class DescargaCertificadoDescendenciaView(APIView):
+    permission_classes = [IsAuthenticated, IsFuncionario]
+
+    def get(self, request, pk):
+
+        funcionario_id=request.auth.get('funcionario_id')
+
+        try:
+            certificado = CertificadoDescendencia.objects.get(
+                id=pk,
+                funcionario_id=funcionario_id
+            )
+        except CertificadoDescendencia.DoesNotExist:
+            raise Http404("El certificado no encontrado")
+        
+        if not certificado.certificado:
+            raise Http404("El certificado no existe")
+
+        registrar_auditoria(
+            request,
+            accion="DOWNLOAD",
+            tramite="CertificadoDescendencia",
+            tramite_id=certificado.id,
+            descripcion=f"Descarga del certificado {certificado.numero_certificado}",
+            user=request.user
+        )
+
+        return FileResponse(
+            certificado.certificado.open('rb'),
+            content_type="application/pdf",
+            as_attachment=True,
+            filename=f"certificado_descendencia_{certificado.numero_certificado}.pdf"
+        )
+
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated, IsFuncionario]
+
+    def post(self, request):
+        registrar_auditoria(
+            request,
+            accion="LOGOUT",
+            descripcion=f"Cierre de sesion del usuario {request.user.username}",
+            user=request.user
+        )
+
+        return Response({
+            "message": "Sesion cerrada exitosamente"
+        })

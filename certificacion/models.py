@@ -140,3 +140,29 @@ class Administrador(models.Model):
 
     def __str__(self):
         return f"{self.nombres} {self.apellido_paterno} {self.apellido_materno} - CI: {self.ci}"
+
+class AuditoriaSistema(models.Model):
+    ACCIONES = [
+        ("LOGIN", "Inicio de sesión"),
+        ('LOGOUT', 'Cierre de sesion'),
+        ("CREATE", "Creación"),
+        ("UPDATE", "Actualización"),
+        ("DELETE", "Eliminación"),
+        ("DOWNLOAD", "Descarga"),
+        ("VIEW", "Consulta"),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    funcionario = models.ForeignKey(Funcionario, on_delete=models.SET_NULL, null=True, blank=True)
+    accion = models.CharField(max_length=50, choices=ACCIONES)
+    tramite = models.CharField(max_length=50, null=True, blank=True)
+    tramite_id = models.IntegerField(null=True, blank=True)
+    descripcion = models.TextField(null=True, blank=True)
+    ip = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(null=True, blank=True)
+    fecha = models.DateField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.accion}-{self.user}"
+
+

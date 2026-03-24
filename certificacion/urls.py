@@ -3,7 +3,7 @@ from django.urls import path
 from .views import (
     CertificadoDescendenciaViewSet, LoginJWTView, FuncionarioInformacionView, 
     FuncionarioUpdateView, CertificadosFuncionarioView, CertificadoPreviewURLView,
-    CertificadoPreviewFileView)
+    CertificadoPreviewFileView, DescargaCertificadoDescendenciaView, LogoutView)
 
 router = DefaultRouter()
 router.register(r'certificados-descendencia', CertificadoDescendenciaViewSet, basename='certificados-descendencia')
@@ -15,4 +15,6 @@ urlpatterns = [
     path('funcionario/me/', FuncionarioUpdateView.as_view()),
     path('funcionario/me/certificados/', CertificadosFuncionarioView.as_view()),
     path('certificados-descendencia/<int:pk>/preview/', CertificadoPreviewURLView.as_view()),
+    path('certificados-descendencia/<int:pk>/descargar/', DescargaCertificadoDescendenciaView.as_view()),
+    path('logout/', LogoutView.as_view(), name="Logout"),
 ] + router.urls
