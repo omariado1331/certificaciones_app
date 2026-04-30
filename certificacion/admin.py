@@ -46,7 +46,7 @@ class FuncionarioAdmin(admin.ModelAdmin):
     search_fields = ("user__username",)
 
 @admin.register(Administrador)
-class FuncionarioAdmin(admin.ModelAdmin):
+class AdministradorAdmin(admin.ModelAdmin):
     list_display = ("nombres", "apellido_paterno", "apellido_materno")
     search_fields = ("user__username",)
 

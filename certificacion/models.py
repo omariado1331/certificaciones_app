@@ -31,6 +31,30 @@ class Funcionario(models.Model):
     ci = models.CharField(max_length=20, unique=True, null=True, blank=True)
     telefono = models.CharField(max_length=20, null=True, blank=True)
     oficina = models.ForeignKey(Oficina, on_delete=models.CASCADE, null=True, blank=True)
+    iniciales = models.CharField(max_length=10, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        
+        iniciales = ""
+
+        # apellido paterno
+        if self.apellido_paterno:
+            iniciales += self.apellido_paterno.strip()[0].upper()
+
+        # apellido materno
+        if self.apellido_materno:
+            iniciales += self.apellido_materno.strip()[0].upper()
+
+        # nombres
+        if self.nombres:
+            nombres_array = self.nombres.strip().split()
+
+            for nombre in nombres_array:
+                if nombre:
+                    iniciales += nombre[0].upper()
+        self.iniciales = iniciales
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.nombres} {self.apellido_paterno} {self.apellido_materno} - CI: {self.ci}"
@@ -41,7 +65,7 @@ class CertificadoDescendencia(models.Model):
         ('VENCIDO', 'Vencido'),
         ('ANULADO', 'Anulado'),
     ]
-    certificado = models.FileField(upload_to='certificados/', null=True, blank=True)
+    certificado = models.FileField(upload_to='certificados/descendencia/', null=True, blank=True)
     ci_solicitante = models.CharField(max_length=20, db_index=True)
     nombres_solicitante = models.CharField(max_length=100)
     # progenitor(a) fields
@@ -51,6 +75,7 @@ class CertificadoDescendencia(models.Model):
 
     # estos campos se llenan desde el formulario de solicitud
     correlativo_formulario = models.CharField(max_length=50, unique=True, null=True, blank=True)
+    valorada = models.CharField(max_length=50, unique=True, null=True, blank=True)
     texto_certificado = models.TextField(null=True, blank=True)
 
     # codigo qr y codigo de seguridad para validación del certificado

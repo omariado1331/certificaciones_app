@@ -137,7 +137,6 @@ class CertificadoPreviewURLView(APIView):
 class CertificadoPreviewFileView(View):
 
     def get (self, request):
-        print("Accediendo a la vista de preview de certificado")
         token = request.GET.get("token")
 
         if not token:
@@ -234,3 +233,4 @@ class LogoutView(APIView):
         return Response({
             "message": "Sesion cerrada exitosamente"
         })
+    

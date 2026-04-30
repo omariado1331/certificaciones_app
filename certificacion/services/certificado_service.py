@@ -14,11 +14,11 @@ from reportlab.platypus import Table, TableStyle, Paragraph, Frame
 from reportlab.lib import colors
 from reportlab.pdfbase import pdfmetrics
 
-
-def generar_qr(certificado):
+# CERTIFICADO DE DESCENDENCIA
+def generar_qr_descendencia(certificado):
 
     url_verificacion = (
-        f"https://verificacion{certificado.id}"
+        f"https://verificacion/descendencia/{certificado.codigo_seguridad}"
     )
 
     qr = qrcode.make(url_verificacion)
@@ -33,7 +33,7 @@ def generar_qr(certificado):
     )
     buffer.close()
 
-def generar_pdf(certificado):
+def generar_pdf_descendencia(certificado):
 
     buffer = BytesIO()
     page_width, page_height = A4
@@ -42,8 +42,8 @@ def generar_pdf(certificado):
     margin_left = 75
     margin_right = 50 
     c = canvas.Canvas(buffer, pagesize=A4)
-    dibujar_encabezado(c, page_width, page_height, margin, margin_left, certificado)
-    dibujar_pie_pagina(c, page_width, margin, height, margin_left, certificado)
+    dibujar_encabezado_descendencia(c, page_width, page_height, margin, margin_left, certificado)
+    dibujar_pie_pagina_descendencia(c, page_width, margin, height, margin_left, certificado)
 
     # ----- cuerpo del certificado -----
 
@@ -64,7 +64,7 @@ def generar_pdf(certificado):
 
     # Texto a justificar
     texto = (
-        f"  El Servicio de Registro Cívico de LA PAZ a solicitud expresa de: <b> {certificado.nombres_solicitante}</b> con C.I."
+        f"El Servicio de Registro Cívico de LA PAZ a solicitud expresa de: <b> {certificado.nombres_solicitante}</b> con C.I."
         f":<b>{certificado.ci_solicitante}</b>"
     )
     parrafo = Paragraph(texto, style)
@@ -84,7 +84,7 @@ def generar_pdf(certificado):
     body_y = height - margin - 145
     c.setFont("Helvetica", 11)
     lines = [
-        "  C E R T I F I C A :"
+        " C E R T I F I C A :"
         ]
     for line in lines:
         c.drawString(margin_left, body_y, line)
@@ -110,7 +110,7 @@ def generar_pdf(certificado):
         "Que, efectuada la verificación en el archivo histórico del Servicio de Registro Cívico, de filiación en el"
         f" orden de descendencia en primer grado de:  <b>{certificado.nombres_progenitor} {certificado.primer_apellido_progenitor} {certificado.segundo_apellido_progenitor}</b>, conforme a los datos "
         "proporcionados por el/la solicitante en el formulario FOR-02(PRO-GRC-CDC-01) con número correlativo: "
-        f"<b>F.C.F./LA PAZ Nº: {certificado.numero_certificado} </b>, se identifica el (los)  siguiente(s)  registro(s) de Nacimiento donde figura como progenitor(a):"
+        f"<b>F.C.F./LA PAZ Nº: {certificado.correlativo_formulario} </b>, se identifica el (los)  siguiente(s)  registro(s) de Nacimiento donde figura como progenitor(a):"
 
     )
     parrafo = Paragraph(texto, style)
@@ -182,7 +182,7 @@ def generar_pdf(certificado):
         save=False
     )
 
-def dibujar_encabezado(c, page_width, page_height, margin, margin_left, certificado):
+def dibujar_encabezado_descendencia(c, page_width, page_height, margin, margin_left, certificado):
 
     BASE_DIR = Path(__file__).resolve().parent.parent
     logo_path = str(BASE_DIR / "static" / "images" / "logo.png")
@@ -247,20 +247,21 @@ def dibujar_encabezado(c, page_width, page_height, margin, margin_left, certific
     c.drawRightString(page_width - margin, page_height - margin - 52, "SERECÍ LA PAZ   ")
     c.drawRightString(page_width - margin, page_height - margin - 68,  f"DESC. N°:{certificado.numero_certificado}/2026 ")
 
-def dibujar_pie_pagina(c, page_width, margin, page_height, margin_left, certificado):
+def dibujar_pie_pagina_descendencia(c, page_width, margin, page_height, margin_left, certificado):
 
     # QR y Normativa
     body_y = page_height - margin - 727
     c.setFont("Helvetica", 7)
     lines = [
-        "Cc.Arch.", 
-        f"{certificado.primer_apellido_progenitor[0]}{certificado.segundo_apellido_progenitor[0]}-{certificado.correlativo}"
+        "Cc.Arch.",
+        f"{certificado.funcionario.iniciales}", 
+        f"{certificado.valorada}"
         ]
     for line in lines:
-        c.drawString(margin_left + 10, body_y, line, charSpace=0.09)
+        c.drawString(margin_left + 10, body_y + 10, line, charSpace=0.09)
         body_y -= 8
     
-    body_y = page_height - margin - 680
+    body_y = page_height - margin - 672
     lines_normativa = [
         "La presente certificación es otorgada en cumplimiento de la Ley Nº 018 del Órgano Electoral Plurinacional,",
         "Reglamento de Acceso a la información de Datos del Servicio de Registro Cívico (SERECÍ)  aprobada por ",
@@ -274,7 +275,7 @@ def dibujar_pie_pagina(c, page_width, margin, page_height, margin_left, certific
     qr_path = certificado.codigo_qr.path
     body_y = page_height - margin - 300
     qr_x = margin_left
-    qr_y = body_y - 420
+    qr_y = body_y - 412
     c.drawImage(qr_path, qr_x, qr_y, width=75, height=75)
 
     # parte final del documento
@@ -286,13 +287,13 @@ def dibujar_pie_pagina(c, page_width, margin, page_height, margin_left, certific
     c.drawCentredString(page_width / 2, 20, "Servicio de Registro Cívico La Paz")
     c.drawRightString(page_width - margin, 20, "© 2026 CD_OA")
 
-def new_page(c, page_width, page_height, margin, margin_left, certificado):
+def new_page_descendencia(c, page_width, page_height, margin, margin_left, certificado):
 
     c.showPage()
 
     # Redibujar automáticamente
-    dibujar_encabezado(c, page_width, page_height, margin, margin_left, certificado)
-    dibujar_pie_pagina(c, page_width, margin, page_height, margin_left, certificado)
+    dibujar_encabezado_descendencia(c, page_width, page_height, margin, margin_left, certificado)
+    dibujar_pie_pagina_descendencia(c, page_width, margin, page_height, margin_left, certificado)
 
 def calculate_column_widths(table_data, available_width, font_name="Helvetica", font_size=8, padding=7):
     max_columns = max(len(row) for row in table_data)
@@ -367,7 +368,7 @@ def draw_table_multipage(canvas_obj, certificado, table_data, column_widths, x_s
 
         table.drawOn(canvas_obj, x_start, y_start - table_height)
 
-        dibujar_nota_final(canvas_obj, certificado, y_start, table_height, page_width, page_height)
+        dibujar_nota_final_descendencia(canvas_obj, certificado, y_start, table_height, page_width, page_height)
 
         # paginacion numero de pagina
         numeracion = f"Página {page_index + 1} de {total_paginas}"
@@ -380,7 +381,7 @@ def draw_table_multipage(canvas_obj, certificado, table_data, column_widths, x_s
 
 
         if page_index < total_paginas - 1:
-            new_page(
+            new_page_descendencia(
                 canvas_obj,
                 page_width,
                 page_height,
@@ -392,7 +393,7 @@ def draw_table_multipage(canvas_obj, certificado, table_data, column_widths, x_s
             y_start = page_height - margin_top - 5
 
 
-def dibujar_nota_final(c, certificado, y_start, table_height, page_width, page_height):
+def dibujar_nota_final_descendencia(c, certificado, y_start, table_height, page_width, page_height):
     margin_left = 75
     margin_right = 50
     margin_bottom = 70
@@ -432,10 +433,10 @@ def dibujar_nota_final(c, certificado, y_start, table_height, page_width, page_h
 
     parrafo.drawOn(c, margin_left, body_y - h)
 
-def generar_documentos_certificado(certificado):
+def generar_documentos_certificado_descendencia(certificado):
 
-    generar_qr(certificado)
+    generar_qr_descendencia(certificado)
     certificado.save(update_fields=["codigo_qr"])
 
-    generar_pdf(certificado)
+    generar_pdf_descendencia(certificado)
     certificado.save(update_fields=["certificado"])

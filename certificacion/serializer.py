@@ -3,7 +3,7 @@ from .models import CertificadoDescendencia, Descendiente
 from django.db import transaction
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import Funcionario, Administrador, CertificadoDescendencia
-from certificacion.services.certificado_service import (generar_documentos_certificado)
+from certificacion.services.certificado_service import (generar_documentos_certificado_descendencia)
 from .utils import registrar_auditoria
 
 class DescendienteSerializer(serializers.ModelSerializer):
@@ -53,7 +53,7 @@ class CertificadoDescendenciaSerializer(serializers.ModelSerializer):
 
             Descendiente.objects.bulk_create(descendientes_obj)
 
-            generar_documentos_certificado(certificado)
+            generar_documentos_certificado_descendencia(certificado)
                
         return certificado
 

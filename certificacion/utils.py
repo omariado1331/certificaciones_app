@@ -11,8 +11,6 @@ def validar_token_preview(token, max_age=60):
     try:
         value = signer.unsign(token, max_age=max_age)
         certificado_id, funcionario_id = value.split(":")
-        print(int(certificado_id))
-        print (int(funcionario_id))
         return int(certificado_id), int(funcionario_id)
     except SignatureExpired:
         return None
